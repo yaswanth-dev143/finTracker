@@ -6,3 +6,5 @@ backend/data/
 frontend/node_modules/
 frontend/dist/
 frontend/.env
+
+AGENTS.md
