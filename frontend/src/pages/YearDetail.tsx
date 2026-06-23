@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Plus, Calendar, DollarSign, TrendingUp, ArrowLeft, ArrowRight } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { api } from "@/utils/api";
 import type { Year, Month } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +23,7 @@ export default function YearDetail() {
   const [showNew, setShowNew] = useState(false);
   const [nmName, setNmName] = useState("");
   const [nmBudget, setNmBudget] = useState("");
+  const [delId, setDelId] = useState<number | null>(null);
 
   async function load() {
     setLoading(true);
@@ -57,8 +59,8 @@ export default function YearDetail() {
   }
 
   async function handleDeleteMonth(id: number) {
-    if (!confirm("Delete this month and all its data?")) return;
     await api.months.delete(id);
+    setDelId(null);
     load();
   }
 
@@ -109,7 +111,7 @@ export default function YearDetail() {
                   <h3 className="text-lg font-semibold">{month.name}</h3>
                   <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                     <Button size="xs" variant="outline" onClick={() => handleCopyMonth(month.id)}>Copy</Button>
-                    <Button size="xs" variant="destructive" onClick={() => handleDeleteMonth(month.id)}>Del</Button>
+                    <Button size="xs" variant="destructive" onClick={() => setDelId(month.id)}>Del</Button>
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
@@ -130,6 +132,14 @@ export default function YearDetail() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={delId !== null}
+        title="Delete Month"
+        message="Delete this month and all its data?"
+        onConfirm={() => handleDeleteMonth(delId!)}
+        onCancel={() => setDelId(null)}
+      />
 
       <Dialog open={showNew} onOpenChange={(open) => { if (!open) { setShowNew(false); setNmName(""); setNmBudget(""); } }}>
         <DialogContent>

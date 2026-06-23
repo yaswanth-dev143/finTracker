@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Calendar, DollarSign, TrendingUp, ArrowRight } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { api } from "@/utils/api";
 import type { Year, Month } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +23,7 @@ export default function MonthsPage() {
   const [nmName, setNmName] = useState("");
   const [nmBudget, setNmBudget] = useState("");
   const [nmYearId, setNmYearId] = useState<number | null>(null);
+  const [delId, setDelId] = useState<number | null>(null);
 
   async function loadMonths() {
     setLoading(true);
@@ -55,8 +57,8 @@ export default function MonthsPage() {
   }
 
   async function handleDeleteMonth(id: number) {
-    if (!confirm("Delete this month and all its data?")) return;
     await api.months.delete(id);
+    setDelId(null);
     loadMonths();
   }
 
@@ -97,7 +99,7 @@ export default function MonthsPage() {
                   </div>
                   <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                     <Button size="xs" variant="outline" onClick={() => handleCopyMonth(month.id)}>Copy</Button>
-                    <Button size="xs" variant="destructive" onClick={() => handleDeleteMonth(month.id)}>Del</Button>
+                    <Button size="xs" variant="destructive" onClick={() => setDelId(month.id)}>Del</Button>
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
@@ -118,6 +120,14 @@ export default function MonthsPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={delId !== null}
+        title="Delete Month"
+        message="Delete this month and all its data?"
+        onConfirm={() => handleDeleteMonth(delId!)}
+        onCancel={() => setDelId(null)}
+      />
 
       <Dialog open={showNew} onOpenChange={(open) => { if (!open) { setShowNew(false); setNmName(""); setNmBudget(""); } }}>
         <DialogContent>

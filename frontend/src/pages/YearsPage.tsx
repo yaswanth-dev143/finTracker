@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, CalendarDays, ArrowRight, FileSpreadsheet, FileType, FileText } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { api } from "@/utils/api";
 import type { Year, Month } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,7 @@ export default function YearsPage() {
   const [exporting, setExporting] = useState<Record<number, string>>({});
   const [showNew, setShowNew] = useState(false);
   const [nyName, setNyName] = useState("");
+  const [delId, setDelId] = useState<number | null>(null);
 
   async function load() {
     setLoading(true);
@@ -47,8 +49,8 @@ export default function YearsPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Delete this year and all its months?")) return;
     await api.years.delete(id);
+    setDelId(null);
     load();
   }
 
@@ -123,7 +125,7 @@ export default function YearsPage() {
                           )}
                         </Button>
                       ))}
-                      <Button size="xs" variant="destructive" onClick={() => handleDelete(year.id)}>Del</Button>
+                       <Button size="xs" variant="destructive" onClick={() => setDelId(year.id)}>Del</Button>
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">{monthCounts[year.id] ?? 0} months</p>
@@ -136,6 +138,14 @@ export default function YearsPage() {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        open={delId !== null}
+        title="Delete Year"
+        message="Delete this year and all its months?"
+        onConfirm={() => handleDelete(delId!)}
+        onCancel={() => setDelId(null)}
+      />
 
       <Dialog open={showNew} onOpenChange={(open) => { if (!open) { setShowNew(false); setNyName(""); } }}>
         <DialogContent>

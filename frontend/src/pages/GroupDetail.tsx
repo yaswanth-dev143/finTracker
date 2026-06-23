@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Edit3, Trash2, Wallet, TrendingDown, PiggyBank, PieChart } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { api } from "@/utils/api";
 import type { GroupDetail as GroupDetailType } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,6 +36,8 @@ export default function GroupDetailPage() {
   const [ncBudget, setNcBudget] = useState("");
 
   const [showTx, setShowTx] = useState<{ id: number; name: string } | null>(null);
+
+  const [delTarget, setDelTarget] = useState<{ id: number; type: "group" | "category" } | null>(null);
   const [txAmount, setTxAmount] = useState("");
   const [txDesc, setTxDesc] = useState("");
   const [txDate, setTxDate] = useState(new Date().toISOString().split("T")[0]);
@@ -58,8 +61,8 @@ export default function GroupDetailPage() {
   }
 
   async function handleDeleteGroup(id: number) {
-    if (!confirm("Delete this group and all its data?")) return;
     await api.groups.delete(id);
+    setDelTarget(null);
     if (group) navigate(`/months/${group.month_id}`);
   }
 
@@ -72,8 +75,8 @@ export default function GroupDetailPage() {
   }
 
   async function handleDeleteCategory(id: number) {
-    if (!confirm("Delete this category?")) return;
     await api.categories.delete(id);
+    setDelTarget(null);
     loadGroup();
   }
 
@@ -120,7 +123,7 @@ export default function GroupDetailPage() {
         <h1 className="text-2xl font-bold">{group.name}</h1>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => { setShowEdit(true); setEditName(group.name); setEditBudget(String(group.allocated_budget)); }}><Edit3 className="size-3.5" /> Edit</Button>
-          <Button size="sm" variant="destructive" onClick={() => handleDeleteGroup(group.id)}><Trash2 className="size-3.5" /> Delete</Button>
+          <Button size="sm" variant="destructive" onClick={() => setDelTarget({ id: group.id, type: "group" })}><Trash2 className="size-3.5" /> Delete</Button>
         </div>
       </div>
 
@@ -191,7 +194,7 @@ export default function GroupDetailPage() {
                     <TableCell>
                       <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                         <Button size="xs" variant="outline" onClick={() => { setShowTx({ id: cat.id, name: cat.name }); }}>+ Tx</Button>
-                        <Button size="xs" variant="destructive" onClick={() => handleDeleteCategory(cat.id)}><Trash2 className="size-3" /></Button>
+                        <Button size="xs" variant="destructive" onClick={() => setDelTarget({ id: cat.id, type: "category" })}><Trash2 className="size-3" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -223,6 +226,14 @@ export default function GroupDetailPage() {
           <DialogFooter><Button variant="outline" onClick={() => { setShowNewCat(false); setNcName(""); setNcBudget(""); }}>Cancel</Button><Button onClick={() => handleCreateCategory(group.id, ncName, Number(ncBudget) || 0)}>Add</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={delTarget !== null}
+        title={delTarget?.type === "group" ? "Delete Group" : "Delete Category"}
+        message={delTarget?.type === "group" ? "Delete this group and all its data?" : "Delete this category?"}
+        onConfirm={() => delTarget!.type === "group" ? handleDeleteGroup(delTarget!.id) : handleDeleteCategory(delTarget!.id)}
+        onCancel={() => setDelTarget(null)}
+      />
 
       {showTx && (
         <TransactionModal

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Edit3, Trash2, Wallet, TrendingDown, PiggyBank, PieChart } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { api } from "@/utils/api";
 import type { CategoryDetail as CategoryDetailType } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,6 +32,8 @@ export default function CategoryDetailPage() {
   const [editBudget, setEditBudget] = useState("");
 
   const [showTx, setShowTx] = useState(false);
+
+  const [delTarget, setDelTarget] = useState<{ id: number; type: "category" | "transaction" } | null>(null);
   const [txAmount, setTxAmount] = useState("");
   const [txDesc, setTxDesc] = useState("");
   const [txDate, setTxDate] = useState(new Date().toISOString().split("T")[0]);
@@ -54,8 +57,8 @@ export default function CategoryDetailPage() {
   }
 
   async function handleDeleteCategory(id: number) {
-    if (!confirm("Delete this category and all transactions?")) return;
     await api.categories.delete(id);
+    setDelTarget(null);
     navigate(-1 as any);
   }
 
@@ -66,8 +69,8 @@ export default function CategoryDetailPage() {
   }
 
   async function handleDeleteTransaction(id: number) {
-    if (!confirm("Delete this transaction?")) return;
     await api.transactions.delete(id);
+    setDelTarget(null);
     loadCategory();
   }
 
@@ -108,7 +111,7 @@ export default function CategoryDetailPage() {
         <h1 className="text-2xl font-bold">{category.name}</h1>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => { setShowEdit(true); setEditName(category.name); setEditBudget(String(category.allocated_budget)); }}><Edit3 className="size-3.5" /> Edit</Button>
-          <Button size="sm" variant="destructive" onClick={() => handleDeleteCategory(category.id)}><Trash2 className="size-3.5" /> Delete</Button>
+          <Button size="sm" variant="destructive" onClick={() => setDelTarget({ id: category.id, type: "category" })}><Trash2 className="size-3.5" /> Delete</Button>
         </div>
       </div>
 
@@ -165,7 +168,7 @@ export default function CategoryDetailPage() {
                     <TableCell>{tx.date}</TableCell>
                     <TableCell>{tx.description}</TableCell>
                     <TableCell className="text-red-500">{formatCurrency(Number(tx.amount), settings.currency.symbol)}</TableCell>
-                    <TableCell><Button size="xs" variant="destructive" onClick={() => handleDeleteTransaction(tx.id)}><Trash2 className="size-3" /></Button></TableCell>
+                    <TableCell><Button size="xs" variant="destructive" onClick={() => setDelTarget({ id: tx.id, type: "transaction" })}><Trash2 className="size-3" /></Button></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -184,6 +187,14 @@ export default function CategoryDetailPage() {
           <DialogFooter><Button variant="outline" onClick={() => setShowEdit(false)}>Cancel</Button><Button onClick={() => handleUpdateCategory(category.id, editName, Number(editBudget))}>Save</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={delTarget !== null}
+        title={delTarget?.type === "category" ? "Delete Category" : "Delete Transaction"}
+        message={delTarget?.type === "category" ? "Delete this category and all transactions?" : "Delete this transaction?"}
+        onConfirm={() => delTarget!.type === "category" ? handleDeleteCategory(delTarget!.id) : handleDeleteTransaction(delTarget!.id)}
+        onCancel={() => setDelTarget(null)}
+      />
 
       {showTx && (
         <TransactionModal

@@ -6,7 +6,7 @@ interface Props {
   title: string;
   message: string;
   confirmLabel?: string;
-  variant?: "destructive" | "primary";
+  variant?: "destructive" | "default";
   saving?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
