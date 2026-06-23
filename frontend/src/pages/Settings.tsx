@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Sun, Moon, Monitor, Download, Trash2, RotateCcw, Check } from "lucide-react";
+import { ArrowLeft, Save, Sun, Moon, Download, Trash2, RotateCcw, Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useSettings } from "@/contexts/SettingsContext";
 import { currencies } from "@/utils/currency";
@@ -47,7 +48,7 @@ export default function SettingsPage() {
       defaultMonthlyBudget: Number(defaultBudget) || 0,
       autoCopyPreviousMonth: autoCopy,
       budgetCycleStartDay: Math.min(31, Math.max(1, Number(cycleDay) || 1)),
-      theme: theme as "light" | "dark" | "system",
+      theme: theme as "light" | "dark",
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -154,19 +155,16 @@ export default function SettingsPage() {
       </SectionCard>
 
       <SectionCard title="Appearance">
-        <div className="grid grid-cols-3 gap-3">
-          {(["light", "dark", "system"] as const).map((t) => (
-            <Button
-              key={t}
-              variant={theme === t ? "default" : "outline"}
-              size="sm"
-              onClick={() => setTheme(t)}
-            >
-              {t === "light" ? <Sun className="size-3.5" /> : t === "dark" ? <Moon className="size-3.5" /> : <Monitor className="size-3.5" />}
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </Button>
-          ))}
-        </div>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <Switch
+            checked={theme === "dark"}
+            onCheckedChange={(dark) => setTheme(dark ? "dark" : "light")}
+          />
+          <div className="flex items-center gap-2">
+            {theme === "dark" ? <Moon className="size-4" /> : <Sun className="size-4" />}
+            <p className="text-sm font-medium">{theme === "dark" ? "Dark Mode" : "Light Mode"}</p>
+          </div>
+        </label>
       </SectionCard>
 
       <SectionCard title="Data Management">

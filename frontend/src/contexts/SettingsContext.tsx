@@ -8,7 +8,7 @@ interface Settings {
   defaultMonthlyBudget: number;
   autoCopyPreviousMonth: boolean;
   budgetCycleStartDay: number;
-  theme: "light" | "dark" | "system";
+  theme: "light" | "dark";
 }
 
 interface SettingsContextValue {
@@ -50,9 +50,8 @@ function loadSettings(): Settings {
   return defaults;
 }
 
-function applyTheme(theme: "light" | "dark" | "system") {
-  const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.classList.toggle("dark", isDark);
+function applyTheme(theme: "light" | "dark") {
+  document.documentElement.classList.toggle("dark", theme === "dark");
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -65,14 +64,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("settings", JSON.stringify(toStore));
     applyTheme(settings.theme);
   }, [settings]);
-
-  useEffect(() => {
-    if (settings.theme !== "system") return;
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => applyTheme("system");
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, [settings.theme]);
 
   const updateSettings = (partial: Partial<Settings>) => {
     setSettings((prev) => ({ ...prev, ...partial }));
